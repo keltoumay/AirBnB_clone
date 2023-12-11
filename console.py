@@ -1,15 +1,46 @@
 #!/usr/bin/python3
 <<<<<<< HEAD
+<<<<<<< HEAD
 """Defines the HBnB console."""
 =======
 """ Defines entry point of the command interpreter."""
 >>>>>>> c87e3fc5b29931544e403069576fd1a4865bb8de
 import cmd
+=======
+"""This module defines the entry point of the command interpreter.
+
+It defines one class, `HBNBCommand()`, which sub-classes the `cmd.Cmd` class.
+This module defines abstractions that allows us to manipulate a powerful
+storage system (FileStorage / DB). This abstraction will also allow us to
+change the type of storage easily without updating all of our codebase.
+
+It allows us to interactively and non-interactively:
+    - create a data model
+    - manage (create, update, destroy, etc) objects via a console / interpreter
+    - store and persist objects to a file (JSON file)
+
+Typical usage example:
+
+    $ ./console
+    (hbnb)
+
+    (hbnb) help
+    Documented commands (type help <topic>):
+    ========================================
+    EOF  create  help  quit
+
+    (hbnb)
+    (hbnb) quit
+    $
+"""
+>>>>>>> a117c8d72be540ce70134bcadf324a2292836c3e
 import re
-from shlex import split
+import cmd
+import json
 from models import storage
 from models.base_model import BaseModel
 from models.user import User
+<<<<<<< HEAD
 <<<<<<< HEAD
 from models.state import State
 from models.city import City
@@ -20,8 +51,15 @@ from models.state import State
 from models.city import City
 >>>>>>> c87e3fc5b29931544e403069576fd1a4865bb8de
 from models.amenity import Amenity
+=======
+from models.state import State
+from models.city import City
+>>>>>>> a117c8d72be540ce70134bcadf324a2292836c3e
 from models.review import Review
+from models.amenity import Amenity
+from models.place import Place
 
+<<<<<<< HEAD
 
 def parse(arg):
     curly_braces = re.search(r"\{(.*?)\}", arg)
@@ -59,10 +97,25 @@ class HBNBCommand(cmd.Cmd):
     """
     Implements the class HBNBCommand.
 >>>>>>> c87e3fc5b29931544e403069576fd1a4865bb8de
+=======
+current_classes = {'BaseModel': BaseModel, 'User': User,
+                   'Amenity': Amenity, 'City': City, 'State': State,
+                   'Place': Place, 'Review': Review}
 
-    Attributes:
-        prompt (str): The command prompt.
+
+class HBNBCommand(cmd.Cmd):
+    """The command interpreter.
+
+    This class represents the command interpreter, and the control center
+    of this project. It defines function handlers for all commands inputted
+    in the console and calls the appropriate storage engine APIs to manipulate
+    application data / models.
+>>>>>>> a117c8d72be540ce70134bcadf324a2292836c3e
+
+    It sub-classes Python's `cmd.Cmd` class which provides a simple framework
+    for writing line-oriented command interpreters.
     """
+<<<<<<< HEAD
 <<<<<<< HEAD
 
     prompt = "(hbnb) "
@@ -149,20 +202,78 @@ class HBNBCommand(cmd.Cmd):
     def do_quit(self, args):
         """ Quit command to exit. """
         return True
+=======
 
-    def do_EOF(self, arg):
-        """ EOF signal to exit the program."""
+    prompt = "(hbnb) "
+
+    def precmd(self, line):
+        """Defines instructions to execute before <line> is interpreted.
+        """
+        if not line:
+            return '\n'
+
+        pattern = re.compile(r"(\w+)\.(\w+)\((.*)\)")
+        match_list = pattern.findall(line)
+        if not match_list:
+            return super().precmd(line)
+
+        match_tuple = match_list[0]
+        if not match_tuple[2]:
+            if match_tuple[1] == "count":
+                instance_objs = storage.all()
+                print(len([
+                    v for _, v in instance_objs.items()
+                    if type(v).__name__ == match_tuple[0]]))
+                return "\n"
+            return "{} {}".format(match_tuple[1], match_tuple[0])
+        else:
+            args = match_tuple[2].split(", ")
+            if len(args) == 1:
+                return "{} {} {}".format(
+                    match_tuple[1], match_tuple[0],
+                    re.sub("[\"\']", "", match_tuple[2]))
+            else:
+                match_json = re.findall(r"{.*}", match_tuple[2])
+                if (match_json):
+                    return "{} {} {} {}".format(
+                        match_tuple[1], match_tuple[0],
+                        re.sub("[\"\']", "", args[0]),
+                        re.sub("\'", "\"", match_json[0]))
+                return "{} {} {} {} {}".format(
+                    match_tuple[1], match_tuple[0],
+                    re.sub("[\"\']", "", args[0]),
+                    re.sub("[\"\']", "", args[1]), args[2])
+
+    def do_help(self, arg):
+        """To get help on a command, type help <topic>.
+        """
+        return super().do_help(arg)
+>>>>>>> a117c8d72be540ce70134bcadf324a2292836c3e
+
+    def do_EOF(self, line):
+        """Inbuilt EOF command to gracefully catch errors.
+        """
         print("")
         return True
 
+    def do_quit(self, arg):
+        """Quit command to exit the program.
+        """
+        return True
+
     def emptyline(self):
-        """ Nothing done when recieving an empty line"""
+        """Override default `empty line + return` behaviour.
+        """
         pass
 
     def do_create(self, arg):
-        """ Creates a new instance of BaseModel, saves it."""
-        argl = parse(arg)
+        """Creates a new instance.
+        """
+        args = arg.split()
+        if not validate_classname(args):
+            return
 
+<<<<<<< HEAD
 >>>>>>> c87e3fc5b29931544e403069576fd1a4865bb8de
         if len(argl) == 0:
             print("** class name missing **")
@@ -206,11 +317,29 @@ class HBNBCommand(cmd.Cmd):
         objdict = storage.all()
 =======
         elif "{}.{}".format(argl[0], argl[1]) not in objd:
+=======
+        new_obj = current_classes[args[0]]()
+        new_obj.save()
+        print(new_obj.id)
+
+    def do_show(self, arg):
+        """Prints the string representation of an instance.
+        """
+        args = arg.split()
+        if not validate_classname(args, check_id=True):
+            return
+
+        instance_objs = storage.all()
+        key = "{}.{}".format(args[0], args[1])
+        req_instance = instance_objs.get(key, None)
+        if req_instance is None:
+>>>>>>> a117c8d72be540ce70134bcadf324a2292836c3e
             print("** no instance found **")
-        else:
-            print(objd["{}.{}".format(argl[0], argl[1])])
+            return
+        print(req_instance)
 
     def do_destroy(self, arg):
+<<<<<<< HEAD
         """ Deletes an instance based on the class name and id."""
         argl = parse(arg)
         objd = storage.all()
@@ -236,21 +365,43 @@ class HBNBCommand(cmd.Cmd):
         argl = parse(arg)
 =======
         elif "{}.{}".format(argl[0], argl[1]) not in objd.keys():
+=======
+        """Deletes an instance based on the class name and id.
+        """
+        args = arg.split()
+        if not validate_classname(args, check_id=True):
+            return
+
+        instance_objs = storage.all()
+        key = "{}.{}".format(args[0], args[1])
+        req_instance = instance_objs.get(key, None)
+        if req_instance is None:
+>>>>>>> a117c8d72be540ce70134bcadf324a2292836c3e
             print("** no instance found **")
-        else:
-            del objd["{}.{}".format(argl[0], argl[1])]
-            storage.save()
+            return
+
+        del instance_objs[key]
+        storage.save()
 
     def do_all(self, arg):
+        """Prints string representation of all instances.
         """
-        Prints all string representation of all instances based.
-        """
-        argl = parse(arg)
+        args = arg.split()
+        all_objs = storage.all()
 
+<<<<<<< HEAD
 >>>>>>> c87e3fc5b29931544e403069576fd1a4865bb8de
         if len(argl) > 0 and argl[0] not in HBNBCommand.__classes:
+=======
+        if len(args) < 1:
+            print(["{}".format(str(v)) for _, v in all_objs.items()])
+            return
+        if args[0] not in current_classes.keys():
+>>>>>>> a117c8d72be540ce70134bcadf324a2292836c3e
             print("** class doesn't exist **")
+            return
         else:
+<<<<<<< HEAD
             objl = []
 <<<<<<< HEAD
 =======
@@ -308,23 +459,76 @@ class HBNBCommand(cmd.Cmd):
             print("** attribute name missing **")
             return False
 =======
+=======
+            print(["{}".format(str(v))
+                  for _, v in all_objs.items() if type(v).__name__ == args[0]])
+            return
 
-        if argl[0] not in HBNBCommand.__classes:
-            print("** class doesn't exist **")
-            return False
+    def do_update(self, arg: str):
+        """Updates an instance based on the class name and id.
+        """
+        args = arg.split(maxsplit=3)
+        if not validate_classname(args, check_id=True):
+            return
 
-        if len(argl) == 1:
-            print("** instance id missing **")
-            return False
-
-        if "{}.{}".format(argl[0], argl[1]) not in objd.keys():
+        instance_objs = storage.all()
+        key = "{}.{}".format(args[0], args[1])
+        req_instance = instance_objs.get(key, None)
+        if req_instance is None:
             print("** no instance found **")
-            return False
+            return
 
-        if len(argl) == 2:
-            print("** attribute name missing **")
-            return False
+        match_json = re.findall(r"{.*}", arg)
+        if match_json:
+            payload = None
+            try:
+                payload: dict = json.loads(match_json[0])
+            except Exception:
+                print("** invalid syntax")
+                return
+            for k, v in payload.items():
+                setattr(req_instance, k, v)
+            storage.save()
+            return
+        if not validate_attrs(args):
+            return
+        first_attr = re.findall(r"^[\"\'](.*?)[\"\']", args[3])
+        if first_attr:
+            setattr(req_instance, args[2], first_attr[0])
+        else:
+            value_list = args[3].split()
+            setattr(req_instance, args[2], parse_str(value_list[0]))
+        storage.save()
+>>>>>>> a117c8d72be540ce70134bcadf324a2292836c3e
 
+
+def validate_classname(args, check_id=False):
+    """Runs checks on args to validate classname entry.
+    """
+    if len(args) < 1:
+        print("** class name missing **")
+        return False
+    if args[0] not in current_classes.keys():
+        print("** class doesn't exist **")
+        return False
+    if len(args) < 2 and check_id:
+        print("** instance id missing **")
+        return False
+    return True
+
+
+def validate_attrs(args):
+    """Runs checks on args to validate classname attributes and values.
+    """
+    if len(args) < 3:
+        print("** attribute name missing **")
+        return False
+    if len(args) < 4:
+        print("** value missing **")
+        return False
+    return True
+
+<<<<<<< HEAD
 >>>>>>> c87e3fc5b29931544e403069576fd1a4865bb8de
         if len(argl) == 3:
             try:
@@ -371,18 +575,49 @@ if __name__ == "__main__":
                 else:
                     obj.__dict__[index] = jndex
         storage.save()
+=======
 
-    def do_count(self, arg):
-        """ Retrieve the number of instances of a class."""
-        argl = parse(arg)
-        count = 0
+def is_float(x):
+    """Checks if `x` is float.
+    """
+    try:
+        a = float(x)
+    except (TypeError, ValueError):
+        return False
+    else:
+        return True
 
-        for obj in storage.all().values():
-            if argl[0] == obj.__class__.__name__:
-                count += 1
-        print(count)
+
+def is_int(x):
+    """Checks if `x` is int.
+    """
+    try:
+        a = float(x)
+        b = int(a)
+    except (TypeError, ValueError):
+        return False
+    else:
+        return a == b
+
+>>>>>>> a117c8d72be540ce70134bcadf324a2292836c3e
+
+def parse_str(arg):
+    """Parse `arg` to an `int`, `float` or `string`.
+    """
+    parsed = re.sub("\"", "", arg)
+
+    if is_int(parsed):
+        return int(parsed)
+    elif is_float(parsed):
+        return float(parsed)
+    else:
+        return arg
 
 
+<<<<<<< HEAD
 if __name__ == '__main__':
 >>>>>>> c87e3fc5b29931544e403069576fd1a4865bb8de
+=======
+if __name__ == "__main__":
+>>>>>>> a117c8d72be540ce70134bcadf324a2292836c3e
     HBNBCommand().cmdloop()
