@@ -38,7 +38,7 @@ Typical usage example:
 import re
 =======
 '''
-Defines entry point of the command interpreter.
+Defines entry point of the command interpreter rrr
 '''
 >>>>>>> 5b613d50bb0fbaeaac59b32c00c4a33c1b3e813d
 import cmd
@@ -241,7 +241,7 @@ from models.review import Review
 
 
 class HBNBCommand(cmd.Cmd):
-    '''Implements the class HBNBCommand.'''
+    '''Implementing of the class HBNBCommand.'''
     prompt = '(hbnb) '
     __classes = [
         "Amenity",
@@ -383,6 +383,7 @@ class HBNBCommand(cmd.Cmd):
 
     def check_class_name(self, name=""):
         """
+<<<<<<< HEAD
 <<<<<<< HEAD
         args = arg.split()
         if not validate_classname(args):
@@ -580,6 +581,9 @@ class HBNBCommand(cmd.Cmd):
             return
 =======
         Checking if stdin user typed class name and id
+=======
+        Checking if stdin user typed class name and id well eayhhh
+>>>>>>> e9f1881b4d0a60c471e7d2914fad7cea4b9fe193
         """
         if len(name) == 0:
             print("** class name missing **")
